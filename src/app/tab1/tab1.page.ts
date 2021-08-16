@@ -13,9 +13,6 @@ import { SocialSharing } from '@ionic-native/social-sharing/ngx';
 })
 export class Tab1Page {
 
-  title = "Grocery"
-
-  items = [];
   errorMessage: string;
 
   constructor(public navCtrl: NavController, public toastCtrl: ToastController, public alertCtrl: AlertController, public dataService: GroceriesServiceService, public inputDialogService: InputDialogServiceService, public socialSharing: SocialSharing) {
@@ -23,67 +20,69 @@ export class Tab1Page {
       this.loadItems();
     });
   }
-
-  
-  loadItems() {
-    this.dataService.getItems()
-      .subscribe(
-        items => this.items = items,
-        error => this.errorMessage = <any>error
-      );
+  items =[];
+  ngOnInit() {
+    this.loadItems();
   }
 
   ionViewDidLoad() {
     this.loadItems();
   }
+    loadItems() {
+       this.dataService.getItems() .subscribe(
+         items => this.items = items,
+         error => this.errorMessage = error);
+        console.log(this.items);
+    }
+
+     async  removeItem(item) {
+        const toast = await this.toastCtrl.create({
+          message: 'deleting Item - ' + item.name + " ...",
+          duration: 3000
+        });
+        await toast.present();
+    this.dataService.removeItem(item);
 
 
-  // Add Item
-  addItem() {
-    console.log('Adding Item...');
-    this.inputDialogService.showAlert();
-  }
-
-  // Edit Item
-  async editItem(item: { Name: string; }, index: any) {
-    console.log('Edit Item: ', item, index);
-    const toast = this.toastCtrl.create({
-      message: 'Updating Item: ' + item.Name,
-      duration: 3000
-    });
-    (await toast).present();
-    this.inputDialogService.showAlert({ item, index });
-  }
-
-  // Remove Item
-  async removeItem(item: { index: string; }, index: any) {
-    console.log("Removing Item - ", item, index);
-    const toast = this.toastCtrl.create({
-      message: 'Removing Item - ' + item.index + " ...",
-      duration: 3000
-    });
-    (await toast).present();
-    this.dataService.removeItem(index);
-  }
-
-  // Share Item
-  async shareItem(item: { name: string; quantity: string; }, index: string) {
-    console.log("Sharing Item -", item, index);
+       }
+  
+  async shareItem(item, index) {
+    console.log("Sharing Item - ", item, index);
     const toast = await this.toastCtrl.create({
       message: 'Sharing Item - ' + index + " ...",
       duration: 3000
     });
-    toast.present();
 
-    let message = "Grocery Item - Name : " + item.name + " - Quantity: " + item.quantity;
+   await toast.present();
+
+    let message = "Grocery Item - Name: " + item.name + " - Quantity: " + item.quantity;
     let subject = "Shared via Groceries app";
 
     this.socialSharing.share(message, subject).then(() => {
       // Sharing via email is possible
-      console.log("Shared successfully!")
+      console.log("Shared successfully!");
     }).catch((error) => {
-      // Sharing via email is not possible
-      console.error("Error while sharing ", error)
-    });
+      console.error("Error while sharing ", error);
+    });    
+
   }
+ 
+  async editItem(item, index) {
+    console.log("Edit Item - ", item, index);
+    const toast = await this.toastCtrl.create({
+    message: 'Editing Item - ' + index + '',
+    duration: 3000
+    });
+    await toast.present();
+    this.inputDialogService.showPrompt(item, index);
+    }
+    
+
+    addItem(item, index) {
+    console.log("Adding Item");
+    this.inputDialogService.showPrompt(item, index);
+    }
 }
+
+  
+  
